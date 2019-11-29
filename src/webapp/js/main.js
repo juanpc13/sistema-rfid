@@ -3,6 +3,7 @@ var btn_abrir = $("#btn_abrir");
 
 btn_abrir.click(function(){
     var json = {solenoid: true};
+    alert("Enviando Abrir");
     if (ws.readyState == WebSocket.OPEN) {
         ws.send(JSON.stringify(json));
     }

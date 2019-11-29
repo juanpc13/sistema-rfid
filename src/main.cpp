@@ -17,8 +17,7 @@ const char *password = "57E04D255E";
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
-boolean solenoid = false;
-boolean solenoidPin = 4;
+uint8_t solenoidPin = 2;
 unsigned long solenoidTime = 0;
 
 void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){  
@@ -32,8 +31,8 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
     Serial.println("Client Recive Data");
     deserializeJson(doc, data);
     JsonVariant varSolenoid = doc["solenoid"];
-    if (!varSolenoid.isNull()) {
-      solenoidTime = millis() + 1000*2;
+    if (!varSolenoid.isNull() && varSolenoid.as<bool>()) {
+      solenoidTime = millis();
     }
   }
 }
@@ -64,8 +63,13 @@ void setup() {
 }
 
 void loop() {
-  //Atender al Solenoid
-  digitalWrite(solenoidPin, solenoid);
-  solenoid = (millis() - solenoidTime >= 0);
-  delay(250);  
+  //Timmer del solenoid 2 segundos
+  if(millis() - solenoidTime <= 2000 && millis() >= 2000){
+    Serial.println("HIGH");
+    digitalWrite(solenoidPin, HIGH);
+  }else{
+    Serial.println("LOW");
+    digitalWrite(solenoidPin, LOW);
+  }
+  delay(250);    
 }
