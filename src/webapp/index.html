@@ -1,13 +1,93 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>Ceia 2019</title>
+    <title>Sistema de cerradura</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
 </head>
+
 <body>
-    <h1>HELLO ESP</h1>
+    <br>
+    <div class="row">
+        <div class="col-1"></div>
+        <div class="col-10">
+            <h1>Sistema de cerradura electrica</h1>
+            <nav>
+                <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                    <a class="nav-item nav-link active" id="sistema-tab" data-toggle="tab" href="#sistema" role="tab"
+                        aria-controls="sistema" aria-selected="true">Sistema</a>
+                    <a class="nav-item nav-link" id="administrar-tab" data-toggle="tab" href="#administrar" role="tab"
+                        aria-controls="administrar" aria-selected="false">Administrar</a>
+                </div>
+            </nav>
+            <div class="tab-content" id="nav-tabContent">
+                <div class="tab-pane fade show active" id="sistema" role="tabpanel" aria-labelledby="sistema-tab">
+                    <h1>Sistema</h1>
+                </div>
+                <div class="tab-pane fade" id="administrar" role="tabpanel" aria-labelledby="administrar-tab">
+                    <br>
+                    <button id="btn_agregar" type="button" class="btn btn-success float-right" data-toggle="modal"
+                        data-target="#exampleModalCenter">Agregar Tarjeta</button>
+                    <br>
+                    <h2>Tarjetas del sistema</h2>
+                    <table class="table">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Usuario</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table_body">
+                            <tr>
+                                <!--th scope="row">1</th>
+                                <td>Mark</td-->
+                                <td colspan="6" class="text-center text-secondary">Cargando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-1"></div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
+        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Agregando Tarjeta</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Por favor posicione la tarjeta que desea registrar sobre el sensor...
+                    <br>
+                    <br>
+                    <div class="form-group row">
+                        <label for="usuario" class="col-sm-2 col-form-label">Usuario:</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="usuario" placeholder="Ingrese Nombre del Usuario" disabled>
+                        </div>                        
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn_cancelar" type="button" class="btn btn-secondary"
+                        data-dismiss="modal">Cancelar</button>
+                    <button id="btn_guardar" type="button" class="btn btn-success" disabled>Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/jquery-3.4.1.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
     <script src="js/main.js"></script>
 </body>
+
 </html>

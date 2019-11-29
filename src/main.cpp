@@ -11,8 +11,8 @@
   #include "FS.h"
 #endif
 
-const char *ssid = "ESP";
-const char *password = "87654321";
+const char *ssid = "TURBONETT_1DFD27";
+const char *password = "57E04D255E";
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -32,7 +32,14 @@ void setup() {
   //Puerto Serial
   Serial.begin(115200);Serial.println();
   //Iniciando punto de acceso
-  WiFi.softAP(ssid, password);
+  //WiFi.softAP(ssid, password);
+  //Conectar Wifi
+  WiFi.mode(WIFI_STA);WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");delay(100);
+  }
+  //Mostrar IP
+  Serial.print("IP : ");Serial.println(WiFi.localIP());
   //Iniciando la memoria SPIFFS  
   SPIFFS.begin();
   //Servidor de Archivos de la memoria SPIFFS
