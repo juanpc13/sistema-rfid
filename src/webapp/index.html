@@ -14,7 +14,7 @@
     <div class="row">
         <div class="col-1"></div>
         <div class="col-10">
-            <h1>Sistema de cerradura electrica</h1>
+            <h1>Sistema de cerradura electrica <span id="estado" class="badge badge-danger">ESTADO</span></h1>
             <nav>
                 <div class="nav nav-tabs" id="nav-tab" role="tablist">
                     <a class="nav-item nav-link active" id="sistema-tab" data-toggle="tab" href="#sistema" role="tab"
@@ -65,20 +65,21 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
-                    Por favor posicione la tarjeta que desea registrar sobre el sensor...
+                <div class="modal-body" style="text-align: center;">
+                    <h5>Por favor posicione la tarjeta que desea registrar sobre el sensor</h5>
+                    <h2 id="hexText"></h2>
                     <br>
                     <br>
                     <div class="form-group row">
                         <label for="usuario" class="col-sm-2 col-form-label">Usuario:</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" id="usuario" placeholder="Ingrese Nombre del Usuario" disabled>
+                            <input type="text" class="form-control" id="usuario" placeholder="Ingrese Nombre del Usuario">
                         </div>                        
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button id="btn_cancelar" type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button id="btn_guardar" type="button" class="btn btn-success" disabled>Guardar</button>
+                    <button id="btn_guardar" type="button" class="btn btn-success">Guardar</button>
                 </div>
             </div>
         </div>

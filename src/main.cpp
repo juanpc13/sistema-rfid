@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
+#include <MFRC522.h>
 #ifdef ESP32
   #include <WiFi.h>
   #include <AsyncTCP.h>
@@ -17,9 +18,14 @@ const char *password = "57E04D255E";
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 //Solenoid
-uint8_t solenoidPin = 2;
+uint8_t solenoidPin = 4;
 unsigned long solenoidTime = 0;
 unsigned long registerTime = 0;
+//RFID Module
+#define SS_PIN 21
+#define RST_PIN 22
+MFRC522 rfid(SS_PIN, RST_PIN);
+byte nuidPICC[4];
 
 
 void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){  
@@ -43,8 +49,19 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
   }
 }
 
+void sendAllJson(String key, String value){
+  // Crear salida en formato JSON
+  String text = "";//respuesta json del websocket
+  StaticJsonDocument<256> doc;
+  JsonObject root = doc.to<JsonObject>();
+  root[key] = value;
+  serializeJson(doc, text);
+  //Enviar por el WebSocket
+  ws.textAll(text.c_str());
+}
+
 void solenoidTimmer(){
-  //Timmer del solenoid 2 segundos  
+  //Timmer del solenoid 2 segundos
   if(millis() - solenoidTime <= 2000 && millis() >= 2000){    
     digitalWrite(solenoidPin, HIGH);
   }else{
@@ -62,9 +79,55 @@ int modeTimmer(){
   }
 }
 
+boolean isCard(){
+  // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
+  if ( ! rfid.PICC_IsNewCardPresent())
+    return false;
+
+  // Verify if the NUID has been readed
+  if ( ! rfid.PICC_ReadCardSerial())
+    return false;
+
+  Serial.print(F("PICC type: "));
+  MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
+  Serial.println(rfid.PICC_GetTypeName(piccType));
+
+  // Check is the PICC of Classic MIFARE type
+  if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI &&  
+    piccType != MFRC522::PICC_TYPE_MIFARE_1K &&
+    piccType != MFRC522::PICC_TYPE_MIFARE_4K) {
+    Serial.println(F("Your tag is not of type MIFARE Classic."));
+    return false;
+  }
+
+  if (rfid.uid.uidByte[0] != nuidPICC[0] || 
+    rfid.uid.uidByte[1] != nuidPICC[1] || 
+    rfid.uid.uidByte[2] != nuidPICC[2] || 
+    rfid.uid.uidByte[3] != nuidPICC[3] ) {    
+
+    // Store NUID into nuidPICC array
+    for (byte i = 0; i < 4; i++) {
+      nuidPICC[i] = rfid.uid.uidByte[i];
+    }
+    return true;
+  }
+  else Serial.println(F("Card read previously."));
+
+  // Halt PICC
+  rfid.PICC_HaltA();
+
+  // Stop encryption on PCD
+  rfid.PCD_StopCrypto1();
+  return false;
+}
+
 void setup() {
   //Inicando el pin del Solenoid apagado
   pinMode(solenoidPin, OUTPUT);digitalWrite(solenoidPin, LOW);
+  //SPI bus
+  SPI.begin(); 
+  //Modulo MFRC522
+  rfid.PCD_Init();
   //Puerto Serial
   Serial.begin(115200);Serial.println();
   //Iniciando punto de acceso
@@ -91,8 +154,21 @@ void loop() {
   uint8_t mode = modeTimmer();
   if(mode == 1){//Leer tarjetas
     Serial.println("Modo Leer");
+    
   }else if (mode == 2){//Registrar Tarjetas
     Serial.println("Modo Registrar");
+    if(isCard()){
+      Serial.println("Tarjeta Encontrada");
+      String hexCode = "";
+      for (byte i = 0; i < 4; i++) { 
+        hexCode += String(nuidPICC[i], HEX);
+        if(i < 3){
+          hexCode += ':';
+        }
+        nuidPICC[i] = 0;
+      }
+      sendAllJson("hex", hexCode);
+    }
   }
   //Se ejecuta cada 2 segundos
   solenoidTimmer();
