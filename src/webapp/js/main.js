@@ -1,9 +1,16 @@
 var ws;//var ws = new WebSocket("ws://" + location.hostname + "/ws");
 var btn_abrir = $("#btn_abrir");
+var btn_agregar = $("#btn_agregar");
 
 btn_abrir.click(function(){
     var json = {solenoid: true};
-    alert("Enviando Abrir");
+    if (ws.readyState == WebSocket.OPEN) {
+        ws.send(JSON.stringify(json));
+    }
+});
+
+btn_agregar.click(function(){
+    var json = {registrar: true};    
     if (ws.readyState == WebSocket.OPEN) {
         ws.send(JSON.stringify(json));
     }

@@ -19,8 +19,8 @@ AsyncWebSocket ws("/ws");
 //Solenoid
 uint8_t solenoidPin = 2;
 unsigned long solenoidTime = 0;
-//Mode 1 = Leer, 2 = Registrar
-uint8_t mode = 1;
+unsigned long registerTime = 0;
+
 
 void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){  
   String text = "";
@@ -36,6 +36,10 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
     if (!varSolenoid.isNull() && varSolenoid.as<bool>()) {
       solenoidTime = millis();
     }
+    JsonVariant varRegistrar = doc["registrar"];
+    if (!varRegistrar.isNull() && varRegistrar.as<bool>()) {
+      registerTime = millis();
+    }
   }
 }
 
@@ -45,6 +49,16 @@ void solenoidTimmer(){
     digitalWrite(solenoidPin, HIGH);
   }else{
     digitalWrite(solenoidPin, LOW);
+  }
+}
+
+int modeTimmer(){
+  //Timmer del de registro son 5 segundos
+  //Mode 1 = Leer, 2 = Registrar
+  if(millis() - registerTime <= 5000 && millis() >= 5000){
+    return 2;
+  }else{
+    return 1;
   }
 }
 
@@ -73,7 +87,15 @@ void setup() {
   server.begin();  
 }
 
-void loop() {
+void loop() {  
+  uint8_t mode = modeTimmer();
+  if(mode == 1){//Leer tarjetas
+    Serial.println("Modo Leer");
+  }else if (mode == 2){//Registrar Tarjetas
+    Serial.println("Modo Registrar");
+  }
   //Se ejecuta cada 2 segundos
   solenoidTimmer();
+  //Delay de Debug
+  delay(500);
 }
