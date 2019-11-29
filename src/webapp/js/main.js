@@ -45,8 +45,8 @@ function countDown(){
 }
 
 function connect() {
-    ws = new WebSocket("ws://192.168.1.10/ws");
-    //ws = new WebSocket("ws://" + location.hostname + "/ws");
+    //ws = new WebSocket("ws://192.168.1.10/ws");
+    ws = new WebSocket("ws://" + location.hostname + "/ws");
     ws.onopen = function () {
         // subscribe to some channels
         console.log("WebSocket Open");

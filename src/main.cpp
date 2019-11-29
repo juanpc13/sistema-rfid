@@ -79,6 +79,31 @@ int modeTimmer(){
   }
 }
 
+boolean save(String usuario, String hexCode){
+  DynamicJsonDocument doc(2048);
+  File file = SPIFFS.open("/data.json", "r");
+  deserializeJson(doc, file);
+  file.close();
+  JsonArray usuarios = doc.as<JsonArray>();
+  
+  return false;
+}
+
+boolean find(String hexCode){
+  DynamicJsonDocument doc(2048);
+  File file = SPIFFS.open("/data.json");
+  deserializeJson(doc, file);
+  file.close();
+
+  JsonArray usuarios = doc.as<JsonArray>();
+  for (JsonVariant u : usuarios) {
+    //if (u["usuario"].as<String>() == usuario) {
+      
+    //}
+  }
+  return false;
+}
+
 boolean isCard(){
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
   if ( ! rfid.PICC_IsNewCardPresent())
@@ -167,6 +192,7 @@ void loop() {
         }
         nuidPICC[i] = 0;
       }
+      solenoidTime = millis();
       sendAllJson("hex", hexCode);
     }
   }
