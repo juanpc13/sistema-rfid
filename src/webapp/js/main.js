@@ -1,4 +1,12 @@
 var ws;//var ws = new WebSocket("ws://" + location.hostname + "/ws");
+var btn_abrir = $("#btn_abrir");
+
+btn_abrir.click(function(){
+    var json = {solenoid: true};
+    if (ws.readyState == WebSocket.OPEN) {
+        ws.send(JSON.stringify(json));
+    }
+});
 
 function connect() {
     ws = new WebSocket("ws://" + location.hostname + "/ws");

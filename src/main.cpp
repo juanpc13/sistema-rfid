@@ -17,18 +17,30 @@ const char *password = "57E04D255E";
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
-void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
-  
+boolean solenoid = false;
+boolean solenoidPin = 4;
+unsigned long solenoidTime = 0;
+
+void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){  
+  String text = "";
+  StaticJsonDocument<256> doc;
   if(type == WS_EVT_CONNECT){
-    Serial.println("Client connected");    
+    Serial.println("Client connected");
   } else if(type == WS_EVT_DISCONNECT){
     Serial.println("Client disconnected");
   } else if(type == WS_EVT_DATA){
     Serial.println("Client Recive Data");
+    deserializeJson(doc, data);
+    JsonVariant varSolenoid = doc["solenoid"];
+    if (!varSolenoid.isNull()) {
+      solenoidTime = millis() + 1000*2;
+    }
   }
 }
 
 void setup() {
+  //Inicando el pin del Solenoid apagado
+  pinMode(solenoidPin, OUTPUT);digitalWrite(solenoidPin, LOW);
   //Puerto Serial
   Serial.begin(115200);Serial.println();
   //Iniciando punto de acceso
@@ -52,5 +64,8 @@ void setup() {
 }
 
 void loop() {
-  //Blucle infinito  
+  //Atender al Solenoid
+  digitalWrite(solenoidPin, solenoid);
+  solenoid = (millis() - solenoidTime >= 0);
+  delay(250);  
 }
