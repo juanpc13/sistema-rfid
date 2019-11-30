@@ -28,7 +28,7 @@ MFRC522 rfid(SS_PIN, RST_PIN);
 byte nuidPICC[4];
 
 
-void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){  
+void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
   String text = "";
   StaticJsonDocument<256> doc;
   if(type == WS_EVT_CONNECT){
@@ -62,7 +62,7 @@ void sendAllJson(String key, String value){
 
 void solenoidTimmer(){
   //Timmer del solenoid 2 segundos
-  if(millis() - solenoidTime <= 2000 && millis() >= 2000){    
+  if(millis() - solenoidTime <= 2000 && millis() >= 2000){
     digitalWrite(solenoidPin, HIGH);
   }else{
     digitalWrite(solenoidPin, LOW);
@@ -85,7 +85,6 @@ boolean save(String usuario, String hexCode){
   deserializeJson(doc, file);
   file.close();
   JsonArray usuarios = doc.as<JsonArray>();
-  
   return false;
 }
 
@@ -98,7 +97,6 @@ boolean find(String hexCode){
   JsonArray usuarios = doc.as<JsonArray>();
   for (JsonVariant u : usuarios) {
     //if (u["usuario"].as<String>() == usuario) {
-      
     //}
   }
   return false;
@@ -118,29 +116,24 @@ boolean isCard(){
   Serial.println(rfid.PICC_GetTypeName(piccType));
 
   // Check is the PICC of Classic MIFARE type
-  if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI &&  
+  if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI &&
     piccType != MFRC522::PICC_TYPE_MIFARE_1K &&
     piccType != MFRC522::PICC_TYPE_MIFARE_4K) {
     Serial.println(F("Your tag is not of type MIFARE Classic."));
     return false;
   }
 
-  if (rfid.uid.uidByte[0] != nuidPICC[0] || 
-    rfid.uid.uidByte[1] != nuidPICC[1] || 
-    rfid.uid.uidByte[2] != nuidPICC[2] || 
-    rfid.uid.uidByte[3] != nuidPICC[3] ) {    
-
+  if (rfid.uid.uidByte[0] != nuidPICC[0] || rfid.uid.uidByte[1] != nuidPICC[1] || rfid.uid.uidByte[2] != nuidPICC[2] || rfid.uid.uidByte[3] != nuidPICC[3]) {
     // Store NUID into nuidPICC array
     for (byte i = 0; i < 4; i++) {
       nuidPICC[i] = rfid.uid.uidByte[i];
     }
     return true;
+  }else{
+    Serial.println(F("Card read previously."));
   }
-  else Serial.println(F("Card read previously."));
-
   // Halt PICC
   rfid.PICC_HaltA();
-
   // Stop encryption on PCD
   rfid.PCD_StopCrypto1();
   return false;
@@ -150,7 +143,7 @@ void setup() {
   //Inicando el pin del Solenoid apagado
   pinMode(solenoidPin, OUTPUT);digitalWrite(solenoidPin, LOW);
   //SPI bus
-  SPI.begin(); 
+  SPI.begin();
   //Modulo MFRC522
   rfid.PCD_Init();
   //Puerto Serial
@@ -164,7 +157,7 @@ void setup() {
   }
   //Mostrar IP
   Serial.print("IP : ");Serial.println(WiFi.localIP());
-  //Iniciando la memoria SPIFFS  
+  //Iniciando la memoria SPIFFS
   SPIFFS.begin();
   //Servidor de Archivos de la memoria SPIFFS
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
@@ -172,20 +165,19 @@ void setup() {
   ws.onEvent(onWsEvent);
   server.addHandler(&ws);
   //Iniciar Servidor
-  server.begin();  
+  server.begin();
 }
 
-void loop() {  
+void loop() {
   uint8_t mode = modeTimmer();
   if(mode == 1){//Leer tarjetas
     Serial.println("Modo Leer");
-    
   }else if (mode == 2){//Registrar Tarjetas
     Serial.println("Modo Registrar");
     if(isCard()){
       Serial.println("Tarjeta Encontrada");
       String hexCode = "";
-      for (byte i = 0; i < 4; i++) { 
+      for (byte i = 0; i < 4; i++) {
         hexCode += String(nuidPICC[i], HEX);
         if(i < 3){
           hexCode += ':';

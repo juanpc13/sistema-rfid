@@ -16,10 +16,10 @@ btn_abrir.click(function(){
 });
 
 btn_agregar.click(function(){
-    hexCode = undefined;    
+    hexCode = undefined;
     usuario.attr("disabled", true);
     btn_guardar.attr("disabled", true);
-    var json = {registrar: true};    
+    var json = {registrar: true};
     if (ws.readyState == WebSocket.OPEN) {
         ws.send(JSON.stringify(json));
     }
@@ -27,14 +27,14 @@ btn_agregar.click(function(){
 });
 
 var n = 5;
-function countDown(){   
+function countDown(){
     if(n > 0){
         if(typeof hexCode !== 'undefined'){
             n = 5;
             return;
         }else{
             setTimeout(countDown,1000);
-        }        
+        }
     }
     hexText.text("Buscando... (" + n + ")");
     n--;
