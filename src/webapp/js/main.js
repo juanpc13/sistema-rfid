@@ -17,13 +17,26 @@ btn_abrir.click(function(){
 
 btn_agregar.click(function(){
     hexCode = undefined;
-    usuario.attr("disabled", true);
+    usuario.attr("disabled", true).removeClass("is-invalid is-valid").val("");
     btn_guardar.attr("disabled", true);
     var json = {registrar: true};
     if (ws.readyState == WebSocket.OPEN) {
         ws.send(JSON.stringify(json));
     }
     countDown();
+});
+
+btn_guardar.click(function(){
+    if(usuario.val()){
+        usuario.removeClass("is-invalid").addClass( "is-valid" );
+        var json = {"usuario":usuario, "hex":hexCode};
+        if (ws.readyState == WebSocket.OPEN) {
+            ws.send(JSON.stringify(json));
+        }
+        btn_cancelar.click();
+    }else{
+        usuario.removeClass("is-valid").addClass( "is-invalid" );
+    }
 });
 
 var n = 5;
@@ -45,8 +58,8 @@ function countDown(){
 }
 
 function connect() {
-    //ws = new WebSocket("ws://192.168.1.10/ws");
-    ws = new WebSocket("ws://" + location.hostname + "/ws");
+    ws = new WebSocket("ws://192.168.1.8/ws");
+    //ws = new WebSocket("ws://" + location.hostname + "/ws");
     ws.onopen = function () {
         // subscribe to some channels
         console.log("WebSocket Open");
@@ -81,3 +94,10 @@ function connect() {
     };
 }
 connect();
+
+function username(e) {
+    if (String.fromCharCode(e.which).match(/^[A-Za-z0-9\x08]$/)) {
+        return true;
+    }
+    return false;
+}

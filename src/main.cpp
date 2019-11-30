@@ -28,27 +28,6 @@ MFRC522 rfid(SS_PIN, RST_PIN);
 byte nuidPICC[4];
 
 
-void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
-  String text = "";
-  StaticJsonDocument<256> doc;
-  if(type == WS_EVT_CONNECT){
-    Serial.println("Client connected");
-  } else if(type == WS_EVT_DISCONNECT){
-    Serial.println("Client disconnected");
-  } else if(type == WS_EVT_DATA){
-    Serial.println("Client Recive Data");
-    deserializeJson(doc, data);
-    JsonVariant varSolenoid = doc["solenoid"];
-    if (!varSolenoid.isNull() && varSolenoid.as<bool>()) {
-      solenoidTime = millis();
-    }
-    JsonVariant varRegistrar = doc["registrar"];
-    if (!varRegistrar.isNull() && varRegistrar.as<bool>()) {
-      registerTime = millis();
-    }
-  }
-}
-
 void sendAllJson(String key, String value){
   // Crear salida en formato JSON
   String text = "";//respuesta json del websocket
@@ -79,25 +58,37 @@ int modeTimmer(){
   }
 }
 
-boolean save(String usuario, String hexCode){
+boolean saveCard(String usuario, String hexCode){
   DynamicJsonDocument doc(2048);
-  File file = SPIFFS.open("/data.json", "r");
-  deserializeJson(doc, file);
-  file.close();
+  File file = SPIFFS.open("/data.json", "w");
+  if (!file) {
+    Serial.println(F("Failed to create file"));
+    return false;
+  }
+  DeserializationError error = deserializeJson(doc, file);
+  if (error){
+    Serial.println(F("Failed to read file, using default configuration"));
+  }
   JsonArray usuarios = doc.as<JsonArray>();
-  return false;
+  JsonObject u = usuarios.createNestedObject();
+  u["usuario"] = usuario;
+  u["hex"] = hexCode;
+  file.close();
+  return true;
 }
 
-boolean find(String hexCode){
+boolean findCard(String hexCode){
   DynamicJsonDocument doc(2048);
-  File file = SPIFFS.open("/data.json");
+  File file = SPIFFS.open("/data.json", "r");
   deserializeJson(doc, file);
   file.close();
 
   JsonArray usuarios = doc.as<JsonArray>();
   for (JsonVariant u : usuarios) {
-    //if (u["usuario"].as<String>() == usuario) {
-    //}
+    Serial.println(u["hex"].as<String>());
+    if (u["hex"].as<String>() == hexCode) {
+      return true;
+    }
   }
   return false;
 }
@@ -116,9 +107,7 @@ boolean isCard(){
   Serial.println(rfid.PICC_GetTypeName(piccType));
 
   // Check is the PICC of Classic MIFARE type
-  if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI &&
-    piccType != MFRC522::PICC_TYPE_MIFARE_1K &&
-    piccType != MFRC522::PICC_TYPE_MIFARE_4K) {
+  if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI && piccType != MFRC522::PICC_TYPE_MIFARE_1K && piccType != MFRC522::PICC_TYPE_MIFARE_4K) {
     Serial.println(F("Your tag is not of type MIFARE Classic."));
     return false;
   }
@@ -137,6 +126,32 @@ boolean isCard(){
   // Stop encryption on PCD
   rfid.PCD_StopCrypto1();
   return false;
+}
+
+void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
+  String text = "";
+  StaticJsonDocument<256> doc;
+  if(type == WS_EVT_CONNECT){
+    Serial.println("Client connected");
+  } else if(type == WS_EVT_DISCONNECT){
+    Serial.println("Client disconnected");
+  } else if(type == WS_EVT_DATA){
+    Serial.println("Client Recive Data");
+    deserializeJson(doc, data);
+    JsonVariant varSolenoid = doc["solenoid"];
+    if (!varSolenoid.isNull() && varSolenoid.as<bool>()) {
+      solenoidTime = millis();
+    }
+    JsonVariant varRegistrar = doc["registrar"];
+    if (!varRegistrar.isNull() && varRegistrar.as<bool>()) {
+      registerTime = millis();
+    }
+    JsonVariant varUsuario = doc["usuario"];
+    JsonVariant varHex = doc["hex"];
+    if (!varUsuario.isNull() && !varHex.isNull()) {
+      saveCard(varUsuario.as<String>(), varHex.as<String>());
+    }
+  }
 }
 
 void setup() {
@@ -168,24 +183,35 @@ void setup() {
   server.begin();
 }
 
+String cardToHexString(){
+  String hexString = "";
+  for (byte i = 0; i < 4; i++) {
+    hexString += String(nuidPICC[i], HEX);
+    if(i < 3){
+      hexString += ':';
+    }
+    nuidPICC[i] = 0;
+  }
+  return hexString;
+}
+
 void loop() {
   uint8_t mode = modeTimmer();
   if(mode == 1){//Leer tarjetas
     Serial.println("Modo Leer");
+    if(isCard()){
+      String hexToString = cardToHexString();
+      if(findCard(hexToString)){
+        solenoidTime = millis();
+      }else{
+        Serial.println("Tarjeta no Registrada");
+      }
+    }
   }else if (mode == 2){//Registrar Tarjetas
     Serial.println("Modo Registrar");
     if(isCard()){
-      Serial.println("Tarjeta Encontrada");
-      String hexCode = "";
-      for (byte i = 0; i < 4; i++) {
-        hexCode += String(nuidPICC[i], HEX);
-        if(i < 3){
-          hexCode += ':';
-        }
-        nuidPICC[i] = 0;
-      }
-      solenoidTime = millis();
-      sendAllJson("hex", hexCode);
+      String hexToString = cardToHexString();
+      sendAllJson("hex", hexToString);
     }
   }
   //Se ejecuta cada 2 segundos
