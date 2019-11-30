@@ -29,7 +29,7 @@ btn_agregar.click(function(){
 btn_guardar.click(function(){
     if(usuario.val()){
         usuario.removeClass("is-invalid").addClass( "is-valid" );
-        var json = {"usuario":usuario, "hex":hexCode};
+        var json = {"usuario":usuario.val(), "hex":hexCode};
         if (ws.readyState == WebSocket.OPEN) {
             ws.send(JSON.stringify(json));
         }
@@ -58,8 +58,8 @@ function countDown(){
 }
 
 function connect() {
-    ws = new WebSocket("ws://192.168.1.8/ws");
-    //ws = new WebSocket("ws://" + location.hostname + "/ws");
+    //ws = new WebSocket("ws://192.168.1.8/ws");
+    ws = new WebSocket("ws://" + location.hostname + "/ws");
     ws.onopen = function () {
         // subscribe to some channels
         console.log("WebSocket Open");
@@ -81,8 +81,8 @@ function connect() {
     ws.onclose = function (evt) {
         console.log('Socket is closed. Reconnect will be attempted in 1 second.', evt.reason);
         setTimeout(function () {
-            connect();
             estado.text("WebSocket Reconectando");
+            connect();
         }, 1000);
     };
 

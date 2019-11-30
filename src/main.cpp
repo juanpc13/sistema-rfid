@@ -5,6 +5,7 @@
 #ifdef ESP32
   #include <WiFi.h>
   #include <AsyncTCP.h>
+  #include "FS.h"
   #include <SPIFFS.h>
 #elif defined(ESP8266)
   #include <ESP8266WiFi.h>
@@ -60,20 +61,18 @@ int modeTimmer(){
 
 boolean saveCard(String usuario, String hexCode){
   DynamicJsonDocument doc(2048);
-  File file = SPIFFS.open("/data.json", "w");
-  if (!file) {
-    Serial.println(F("Failed to create file"));
-    return false;
-  }
-  DeserializationError error = deserializeJson(doc, file);
-  if (error){
-    Serial.println(F("Failed to read file, using default configuration"));
-  }
+  File file = SPIFFS.open("/data.json", "r");
+  deserializeJson(doc, file);
+  file.close();
   JsonArray usuarios = doc.as<JsonArray>();
   JsonObject u = usuarios.createNestedObject();
-  u["usuario"] = usuario;
-  u["hex"] = hexCode;
-  file.close();
+  u["usuario"] = usuario;u["hex"] = hexCode;
+  // Serialize JSON to file
+  file = SPIFFS.open("/data.json", "w");
+  if (serializeJson(doc, file) == 0) {
+    Serial.println(F("Failed to write to file"));
+    return false;
+  }
   return true;
 }
 
@@ -85,8 +84,8 @@ boolean findCard(String hexCode){
 
   JsonArray usuarios = doc.as<JsonArray>();
   for (JsonVariant u : usuarios) {
-    Serial.println(u["hex"].as<String>());
     if (u["hex"].as<String>() == hexCode) {
+      Serial.println(u["usuario"].as<String>());
       return true;
     }
   }
