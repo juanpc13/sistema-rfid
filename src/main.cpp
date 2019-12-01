@@ -30,6 +30,7 @@ unsigned long registerTime = 0;
 MFRC522 rfid(SS_PIN, RST_PIN);
 byte nuidPICC[4];
 //System
+const char *csvFile = "/data.csv";
 #define ledPin 2
 #define btnReg 0
 
@@ -65,40 +66,42 @@ int modeTimmer(){
 }
 
 boolean saveCard(String usuario, String hexCode){
-  DynamicJsonDocument doc(2048);
-  File file = SPIFFS.open("/data.json", "r");
-  ReadBufferingStream bufferedRFile{file, 64};  // <- HERE
-  deserializeJson(doc, bufferedRFile);
-  file.close();
-  JsonArray usuarios = doc.as<JsonArray>();
-  JsonObject u = usuarios.createNestedObject();
-  u["usuario"] = usuario;u["hex"] = hexCode;
-  // Serialize JSON to file
-  file = SPIFFS.open("/data.json", "w");
-  WriteBufferingStream bufferedWFile{file, 64};
-  if (serializeJson(doc, bufferedWFile) == 0) {
-    Serial.println(F("Failed to write to file"));
+  //Si no exites el archivo, Crear los headers del csv
+  if(!SPIFFS.exists(csvFile)){
+    Serial.println(F("Crear archivo CSV"));
+    File file = SPIFFS.open(csvFile, FILE_APPEND);
+    const char *headersCSV = "usuario,hex";
+    if(!file.println(headersCSV)){
+      Serial.println(F("No se ha podido escribir los headers"));
+      file.close();
+      return false;
+    }
+    file.close();
+  }
+  //Guardar el usuario con su tarjeta
+  String text = usuario + ',' + hexCode;
+  File file = SPIFFS.open(csvFile, FILE_APPEND);
+  if(!file.println(text)){
+    Serial.println(F("No se ha podido escribir la tarjeta"));
     return false;
   }
-  bufferedWFile.flush();  // <- OPTIONAL
   file.close();
   return true;
 }
 
 boolean findCard(String hexCode){
-  DynamicJsonDocument doc(2048);
-  File file = SPIFFS.open("/data.json", "r");
-  ReadBufferingStream bufferedFile{file, 64};  // <- HERE
-  deserializeJson(doc, bufferedFile);
-  file.close();
-
-  JsonArray usuarios = doc.as<JsonArray>();
-  for (JsonVariant u : usuarios) {
-    if (u["hex"].as<String>() == hexCode) {
-      Serial.println(u["usuario"].as<String>());
-      return true;
+  File file = SPIFFS.open(csvFile, "r");
+  String line = "";
+  while (file.available()) {
+    char c = file.read();
+    if(c == '\n'){
+      Serial.println(line);
+      line = "";
+    }else{
+      line += c;
     }
   }
+  file.close();
   return false;
 }
 

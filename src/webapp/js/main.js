@@ -111,9 +111,9 @@ function getUsuarios() {
         type: "GET",
         async: false,
         //url: "http://192.168.1.8/data.json",
-        url: "data.json",
+        url: "data.csv",
         success: function (data) {
-            var response = data;
+            var response = csvJSON(data);
             //var response = jQuery.parseJSON(data);
             if (typeof response === 'undefined') {
                 alert("Error al Cargar la Tabla");
@@ -151,6 +151,24 @@ function cargarTabla() {
         var tr = createTableRowWith(emptyValue);
         table_body.append(tr);
     }
+}
+
+function csvJSON(csv){
+    var lines=csv.split("\n");
+    var result = [];
+    var headers=lines[0].split(",");
+
+    for(var i=1;i<lines.length;i++){
+        var obj = {};
+        var currentline=lines[i].split(",");
+
+        for(var j=0;j<headers.length;j++){
+            obj[headers[j]] = currentline[j];
+        }
+        result.push(obj);
+    }
+    return result; //JavaScript object
+    //return JSON.stringify(result); //JSON
 }
 
 function cargarTablaDelay(){
