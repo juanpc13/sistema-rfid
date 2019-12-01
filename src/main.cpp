@@ -71,7 +71,7 @@ boolean saveCard(String usuario, String hexCode){
     Serial.println(F("Crear archivo CSV"));
     File file = SPIFFS.open(csvFile, FILE_APPEND);
     const char *headersCSV = "usuario,hex";
-    if(!file.println(headersCSV)){
+    if(!file.print(headersCSV)){
       Serial.println(F("No se ha podido escribir los headers"));
       file.close();
       return false;
@@ -79,9 +79,9 @@ boolean saveCard(String usuario, String hexCode){
     file.close();
   }
   //Guardar el usuario con su tarjeta
-  String text = usuario + ',' + hexCode;
+  String text = '\n' + usuario + ',' + hexCode;
   File file = SPIFFS.open(csvFile, FILE_APPEND);
-  if(!file.println(text)){
+  if(!file.print(text)){
     Serial.println(F("No se ha podido escribir la tarjeta"));
     return false;
   }
@@ -101,6 +101,7 @@ boolean findCard(String hexCode){
       line += c;
     }
   }
+  //Serial.println(line);
   file.close();
   return false;
 }

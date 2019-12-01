@@ -146,23 +146,23 @@ function cargarTabla() {
             var tr = createTableRowWith(value);
             table_body.append(tr);
         });
-    }else{
-        var emptyValue = {"usuario":"-", "hex":"-"};
+    } else {
+        var emptyValue = { "usuario": "-", "hex": "-" };
         var tr = createTableRowWith(emptyValue);
         table_body.append(tr);
     }
 }
 
-function csvJSON(csv){
-    var lines=csv.split("\n");
+function csvJSON(csv) {
+    var lines = csv.split("\n");
     var result = [];
-    var headers=lines[0].split(",");
+    var headers = lines[0].split(",");
 
-    for(var i=1;i<lines.length;i++){
+    for (var i = 1; i < lines.length; i++) {
         var obj = {};
-        var currentline=lines[i].split(",");
+        var currentline = lines[i].split(",");
 
-        for(var j=0;j<headers.length;j++){
+        for (var j = 0; j < headers.length; j++) {
             obj[headers[j]] = currentline[j];
         }
         result.push(obj);
@@ -171,7 +171,7 @@ function csvJSON(csv){
     //return JSON.stringify(result); //JSON
 }
 
-function cargarTablaDelay(){
+function cargarTablaDelay() {
     setTimeout(function () {
         cargarTabla();
     }, 1000);
