@@ -29,6 +29,9 @@ unsigned long registerTime = 0;
 #define RST_PIN 22
 MFRC522 rfid(SS_PIN, RST_PIN);
 byte nuidPICC[4];
+//System
+#define ledPin 2
+#define btnReg 0
 
 
 void sendAllJson(String key, String value){
@@ -115,7 +118,7 @@ boolean isCard(){
   // Check is the PICC of Classic MIFARE type
   if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI && piccType != MFRC522::PICC_TYPE_MIFARE_1K && piccType != MFRC522::PICC_TYPE_MIFARE_4K) {
     Serial.println(F("Your tag is not of type MIFARE Classic."));
-    return false;
+    //return false;
   }
 
   if (rfid.uid.uidByte[0] != nuidPICC[0] || rfid.uid.uidByte[1] != nuidPICC[1] || rfid.uid.uidByte[2] != nuidPICC[2] || rfid.uid.uidByte[3] != nuidPICC[3]) {
@@ -163,6 +166,9 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
 void setup() {
   //Inicando el pin del Solenoid apagado
   pinMode(solenoidPin, OUTPUT);digitalWrite(solenoidPin, LOW);
+  //Debug Hardware
+  pinMode(btnReg, INPUT);
+  pinMode(ledPin, OUTPUT);digitalWrite(ledPin, LOW);
   //SPI bus
   SPI.begin();
   //Modulo MFRC522
@@ -213,6 +219,7 @@ void loop() {
     Serial.println("Modo Leer");
     if(isCard()){
       String hexToString = cardToHexString();
+      Serial.println(hexToString);
       if(findCard(hexToString)){
         solenoidTime = millis();
       }else{
@@ -230,4 +237,24 @@ void loop() {
   solenoidTimmer();
   //Delay de Debug
   delay(500);
+
+  //Registro Manual
+  if(digitalRead(btnReg) == 0){
+    digitalWrite(ledPin, HIGH);
+    while(digitalRead(btnReg) == 0 && !isCard()){
+      delay(100);
+    }
+    String hexToString = cardToHexString();
+    if(hexToString != "0:0:0:0"){
+      digitalWrite(ledPin, LOW);
+      saveCard("invitado", hexToString);
+      delay(100);
+      digitalWrite(ledPin, HIGH);
+    }
+    while(digitalRead(btnReg) == 0){
+      delay(100);
+    }
+    digitalWrite(ledPin, LOW);
+  }
+
 }
