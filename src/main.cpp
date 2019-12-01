@@ -30,7 +30,7 @@ unsigned long registerTime = 0;
 MFRC522 rfid(SS_PIN, RST_PIN);
 byte nuidPICC[4];
 //System
-const char *csvFile = "/data.csv";
+#define csvFile "/data.csv"
 #define ledPin 2
 #define btnReg 0
 
@@ -145,11 +145,11 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
   String text = "";
   StaticJsonDocument<256> doc;
   if(type == WS_EVT_CONNECT){
-    Serial.println("Client connected");
+    Serial.println(F("Client connected"));
   } else if(type == WS_EVT_DISCONNECT){
-    Serial.println("Client disconnected");
+    Serial.println(F("Client disconnected"));
   } else if(type == WS_EVT_DATA){
-    Serial.println("Client Recive Data");
+    Serial.println(F("Client Recive Data"));
     deserializeJson(doc, data);
     JsonVariant varSolenoid = doc["solenoid"];
     if (!varSolenoid.isNull() && varSolenoid.as<bool>()) {
@@ -190,7 +190,7 @@ void setup() {
   Serial.print("IP : ");Serial.println(WiFi.localIP());
   //DNS para servicio de hostname
   if (!MDNS.begin("sistema-rfid")) {
-    Serial.println("Error setting up MDNS responder!");
+    Serial.println(F("Error setting up MDNS responder!"));
   }
   MDNS.addService("http", "tcp", 80);
   //Iniciando la memoria SPIFFS
@@ -220,18 +220,18 @@ String cardToHexString(){
 void loop() {
   uint8_t mode = modeTimmer();
   if(mode == 1){//Leer tarjetas
-    Serial.println("Modo Leer");
+    Serial.println(F("Modo Leer"));
     if(isCard()){
       String hexToString = cardToHexString();
       Serial.println(hexToString);
       if(findCard(hexToString)){
         solenoidTime = millis();
       }else{
-        Serial.println("Tarjeta no Registrada");
+        Serial.println(F("Tarjeta no Registrada"));
       }
     }
   }else if (mode == 2){//Registrar Tarjetas
-    Serial.println("Modo Registrar");
+    Serial.println(F("Modo Registrar"));
     if(isCard()){
       String hexToString = cardToHexString();
       sendAllJson("hex", hexToString);
