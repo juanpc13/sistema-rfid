@@ -35,7 +35,7 @@ byte nuidPICC[4];
 #define btnReg 0
 
 
-void sendAllJson(String key, String value){
+void sendAllJson(const String& key, const String& value){
   // Crear salida en formato JSON
   String text = "";//respuesta json del websocket
   StaticJsonDocument<256> doc;
@@ -65,7 +65,7 @@ int modeTimmer(){
   }
 }
 
-boolean saveCard(String usuario, String hexCode){
+boolean saveCard(const String& usuario, const String& hexCode){
   //Si no exites el archivo, Crear los headers del csv
   if(!SPIFFS.exists(csvFile)){
     Serial.println(F("Crear archivo CSV"));
@@ -79,7 +79,8 @@ boolean saveCard(String usuario, String hexCode){
     file.close();
   }
   //Guardar el usuario con su tarjeta
-  String text = '\n' + usuario + ',' + hexCode;
+  String text;
+  text.concat('\n');text.concat(usuario);text.concat(',');text.concat(hexCode);
   File file = SPIFFS.open(csvFile, FILE_APPEND);
   if(!file.print(text)){
     Serial.println(F("No se ha podido escribir la tarjeta"));
@@ -89,7 +90,7 @@ boolean saveCard(String usuario, String hexCode){
   return true;
 }
 
-boolean findCard(String hexCode){
+boolean findCard(const String &hexCode){
   File file = SPIFFS.open(csvFile, "r");
   String line = "";
   while (file.available()) {
@@ -98,7 +99,7 @@ boolean findCard(String hexCode){
       Serial.println(line);
       line = "";
     }else{
-      line += c;
+      line.concat(c);
     }
   }
   //Serial.println(line);
@@ -208,9 +209,9 @@ void setup() {
 String cardToHexString(){
   String hexString = "";
   for (byte i = 0; i < 4; i++) {
-    hexString += String(nuidPICC[i], HEX);
+    hexString.concat(String(nuidPICC[i], HEX));
     if(i < 3){
-      hexString += ':';
+      hexString.concat(':');
     }
     nuidPICC[i] = 0;
   }
