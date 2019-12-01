@@ -2,15 +2,17 @@
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
 #include <MFRC522.h>
+#include <StreamUtils.h>
 #ifdef ESP32
   #include <WiFi.h>
   #include <AsyncTCP.h>
-  #include "FS.h"
   #include <SPIFFS.h>
+  #include <ESPmDNS.h>
 #elif defined(ESP8266)
   #include <ESP8266WiFi.h>
   #include <ESPAsyncTCP.h>
   #include "FS.h"
+  #include <ESP8266mDNS.h>
 #endif
 
 const char *ssid = "TURBONETT_1DFD27";
@@ -62,24 +64,29 @@ int modeTimmer(){
 boolean saveCard(String usuario, String hexCode){
   DynamicJsonDocument doc(2048);
   File file = SPIFFS.open("/data.json", "r");
-  deserializeJson(doc, file);
+  ReadBufferingStream bufferedRFile{file, 64};  // <- HERE
+  deserializeJson(doc, bufferedRFile);
   file.close();
   JsonArray usuarios = doc.as<JsonArray>();
   JsonObject u = usuarios.createNestedObject();
   u["usuario"] = usuario;u["hex"] = hexCode;
   // Serialize JSON to file
   file = SPIFFS.open("/data.json", "w");
-  if (serializeJson(doc, file) == 0) {
+  WriteBufferingStream bufferedWFile{file, 64};
+  if (serializeJson(doc, bufferedWFile) == 0) {
     Serial.println(F("Failed to write to file"));
     return false;
   }
+  bufferedWFile.flush();  // <- OPTIONAL
+  file.close();
   return true;
 }
 
 boolean findCard(String hexCode){
   DynamicJsonDocument doc(2048);
   File file = SPIFFS.open("/data.json", "r");
-  deserializeJson(doc, file);
+  ReadBufferingStream bufferedFile{file, 64};  // <- HERE
+  deserializeJson(doc, bufferedFile);
   file.close();
 
   JsonArray usuarios = doc.as<JsonArray>();
@@ -171,6 +178,11 @@ void setup() {
   }
   //Mostrar IP
   Serial.print("IP : ");Serial.println(WiFi.localIP());
+  //DNS para servicio de hostname
+  if (!MDNS.begin("sistema-rfid")) {
+    Serial.println("Error setting up MDNS responder!");
+  }
+  MDNS.addService("http", "tcp", 80);
   //Iniciando la memoria SPIFFS
   SPIFFS.begin();
   //Servidor de Archivos de la memoria SPIFFS
