@@ -7,51 +7,53 @@ var btn_cancelar = $("#btn_cancelar");
 var estado = $("#estado");
 var hexText = $("#hexText");
 var hexCode = undefined;
+var table_body = $("#table_body");
 
-btn_abrir.click(function(){
-    var json = {solenoid: true};
+btn_abrir.click(function () {
+    var json = { solenoid: true };
     if (ws.readyState == WebSocket.OPEN) {
         ws.send(JSON.stringify(json));
     }
 });
 
-btn_agregar.click(function(){
+btn_agregar.click(function () {
     hexCode = undefined;
     usuario.attr("disabled", true).removeClass("is-invalid is-valid").val("");
     btn_guardar.attr("disabled", true);
-    var json = {registrar: true};
+    var json = { registrar: true };
     if (ws.readyState == WebSocket.OPEN) {
         ws.send(JSON.stringify(json));
     }
     countDown();
 });
 
-btn_guardar.click(function(){
-    if(usuario.val()){
-        usuario.removeClass("is-invalid").addClass( "is-valid" );
-        var json = {"usuario":usuario.val(), "hex":hexCode};
+btn_guardar.click(function () {
+    if (usuario.val()) {
+        usuario.removeClass("is-invalid").addClass("is-valid");
+        var json = { "usuario": usuario.val(), "hex": hexCode };
         if (ws.readyState == WebSocket.OPEN) {
             ws.send(JSON.stringify(json));
         }
+        cargarTablaDelay();
         btn_cancelar.click();
-    }else{
-        usuario.removeClass("is-valid").addClass( "is-invalid" );
+    } else {
+        usuario.removeClass("is-valid").addClass("is-invalid");
     }
 });
 
 var n = 5;
-function countDown(){
-    if(n > 0){
-        if(typeof hexCode !== 'undefined'){
+function countDown() {
+    if (n > 0) {
+        if (typeof hexCode !== 'undefined') {
             n = 5;
             return;
-        }else{
-            setTimeout(countDown,1000);
+        } else {
+            setTimeout(countDown, 1000);
         }
     }
     hexText.text("Buscando... (" + n + ")");
     n--;
-    if(n < 0){
+    if (n < 0) {
         n = 5;
         btn_cancelar.click();
     }
@@ -63,13 +65,14 @@ function connect() {
     ws.onopen = function () {
         // subscribe to some channels
         console.log("WebSocket Open");
-        estado.attr("class","badge badge-success");
+        estado.attr("class", "badge badge-success");
         estado.text("WebSocket en linea");
+        cargarTablaDelay();
     };
 
     ws.onmessage = function (evt) {
         var json = JSON.parse(evt.data);
-        if(typeof json.hex !== 'undefined'){
+        if (typeof json.hex !== 'undefined') {
             hexCode = json.hex;
             hexText.text(hexCode);
             usuario.attr("disabled", false);
@@ -88,7 +91,7 @@ function connect() {
 
     ws.onerror = function (err) {
         console.error('Socket encountered error: ', err.message, 'Closing socket');
-        estado.attr("class","badge badge-danger");
+        estado.attr("class", "badge badge-danger");
         estado.text("WebSocket en error");
         ws.close();
     };
@@ -100,4 +103,58 @@ function username(e) {
         return true;
     }
     return false;
+}
+
+function getUsuarios() {
+    var list = [];
+    $.ajax({
+        type: "GET",
+        async: false,
+        //url: "http://192.168.1.8/data.json",
+        url: "data.json",
+        success: function (data) {
+            var response = data;
+            //var response = jQuery.parseJSON(data);
+            if (typeof response === 'undefined') {
+                alert("Error al Cargar la Tabla");
+            } else {
+                list = response;
+            }
+        }
+    });
+    return list;
+}
+
+function createTableRowWith(value) {
+    var tr = document.createElement("tr");
+    var td1 = document.createElement("th");
+    var td2 = document.createElement("td");
+    td1.setAttribute("scope", "row");
+    td1.innerText = value.hex;
+    td2.innerText = value.usuario;
+    tr.append(td1, td2);
+    return tr;
+}
+
+function cargarTabla() {
+    var listTable = getUsuarios();
+    if (listTable.length > 0) {
+        //Vaciar la tabla
+        table_body.html("");
+        //Llenar la tabla
+        $.each(listTable, function (key, value) {
+            var tr = createTableRowWith(value);
+            table_body.append(tr);
+        });
+    }else{
+        var emptyValue = {"usuario":"-", "hex":"-"};
+        var tr = createTableRowWith(emptyValue);
+        table_body.append(tr);
+    }
+}
+
+function cargarTablaDelay(){
+    setTimeout(function () {
+        cargarTabla();
+    }, 1000);
 }

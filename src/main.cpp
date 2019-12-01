@@ -191,6 +191,7 @@ void setup() {
   ws.onEvent(onWsEvent);
   server.addHandler(&ws);
   //Iniciar Servidor
+  DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
   server.begin();
 }
 
