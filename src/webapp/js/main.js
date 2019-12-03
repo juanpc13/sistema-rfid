@@ -78,6 +78,19 @@ function connect() {
             usuario.attr("disabled", false);
             btn_guardar.attr("disabled", false);
         }
+        if (typeof json.message !== 'undefined') {
+            var splitMessage = json.message.split("-");
+            var code = splitMessage[0];
+            var message = splitMessage[1];
+            switch(code){
+                case "1":
+                    toastr.success(message);
+                    break;
+                case "2":
+                    toastr.error(message);
+                    break;
+            }
+        }
         console.log(json);
     };
 
@@ -93,6 +106,7 @@ function connect() {
         console.error('Socket encountered error: ', err.message, 'Closing socket');
         estado.attr("class", "badge badge-danger");
         estado.text("WebSocket en error");
+        toastr.error('Verificar conexiones de red o reiniciar dispositivo', 'WebSocket');
         ws.close();
     };
 }
