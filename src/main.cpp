@@ -227,6 +227,40 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
   }
 }
 
+String cardToHexString(){
+  String hexString = "";
+  for (byte i = 0; i < 4; i++) {
+    hexString.concat(String(nuidPICC[i], HEX));
+    if(i < 3){
+      hexString.concat(':');
+    }
+    nuidPICC[i] = 0;
+  }
+  return hexString;
+}
+
+void manualRegister(){
+  //Registro Manual
+  if(digitalRead(btnReg) == 0){
+    digitalWrite(ledPin, HIGH);
+    while(digitalRead(btnReg) == 0 && !isCard()){
+      delay(100);
+    }
+    String hexToString = cardToHexString();
+    if(hexToString != "0:0:0:0"){
+      digitalWrite(ledPin, LOW);
+      saveCard("invitado", hexToString);
+      saveLog(today(), "hardware", F("Se ha registrado invitado manualmente"));
+      delay(100);
+      digitalWrite(ledPin, HIGH);
+    }
+    while(digitalRead(btnReg) == 0){
+      delay(100);
+    }
+    digitalWrite(ledPin, LOW);
+  }
+}
+
 void setup() {
   //Inicando el pin del Solenoid apagado
   pinMode(solenoidPin, OUTPUT);digitalWrite(solenoidPin, LOW);
@@ -265,40 +299,6 @@ void setup() {
   server.begin();
   //NTP
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-}
-
-String cardToHexString(){
-  String hexString = "";
-  for (byte i = 0; i < 4; i++) {
-    hexString.concat(String(nuidPICC[i], HEX));
-    if(i < 3){
-      hexString.concat(':');
-    }
-    nuidPICC[i] = 0;
-  }
-  return hexString;
-}
-
-void manualRegister(){
-  //Registro Manual
-  if(digitalRead(btnReg) == 0){
-    digitalWrite(ledPin, HIGH);
-    while(digitalRead(btnReg) == 0 && !isCard()){
-      delay(100);
-    }
-    String hexToString = cardToHexString();
-    if(hexToString != "0:0:0:0"){
-      digitalWrite(ledPin, LOW);
-      saveCard("invitado", hexToString);
-      saveLog(today(), "hardware", F("Se ha registrado invitado manualmente"));
-      delay(100);
-      digitalWrite(ledPin, HIGH);
-    }
-    while(digitalRead(btnReg) == 0){
-      delay(100);
-    }
-    digitalWrite(ledPin, LOW);
-  }
 }
 
 void loop() {
