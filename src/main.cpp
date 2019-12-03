@@ -204,35 +204,6 @@ boolean isCard(){
   return false;
 }
 
-void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
-  String text = "";
-  StaticJsonDocument<256> doc;
-  if(type == WS_EVT_CONNECT){
-    Serial.println(F("Client connected"));
-  } else if(type == WS_EVT_DISCONNECT){
-    Serial.println(F("Client disconnected"));
-  } else if(type == WS_EVT_DATA){
-    Serial.println(F("Client Recive Data"));
-    deserializeJson(doc, data);
-    JsonVariant varSolenoid = doc["solenoid"];
-    if (!varSolenoid.isNull() && varSolenoid.as<bool>()) {
-      saveLog(today(), client->remoteIP().toString().c_str(), F("Se ha accionado la cerradura desde la web"));
-      solenoidTime = millis();
-    }
-    JsonVariant varRegistrar = doc["registrar"];
-    if (!varRegistrar.isNull() && varRegistrar.as<bool>()) {
-      registerTime = millis();
-    }
-    JsonVariant varUsuario = doc["usuario"];
-    JsonVariant varHex = doc["hex"];
-    if (!varUsuario.isNull() && !varHex.isNull()) {
-      saveCard(varUsuario.as<String>(), varHex.as<String>());
-      saveLog(today(), varHex.as<String>(), F("Nueva tarjeta registrada"));
-      sendAllJson("message", "success-Se ha registrada tarjeta");
-    }
-  }
-}
-
 String cardToHexString(){
   String hexString = "";
   for (byte i = 0; i < 4; i++) {
@@ -264,6 +235,45 @@ void manualRegister(){
       delay(100);
     }
     digitalWrite(ledPin, LOW);
+  }
+}
+
+void resetAllSystem(){
+  SPIFFS.remove(csvLogs);
+  SPIFFS.remove(csvFile);
+  ESP.restart();
+}
+
+void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
+  String text = "";
+  StaticJsonDocument<256> doc;
+  if(type == WS_EVT_CONNECT){
+    Serial.println(F("Client connected"));
+  } else if(type == WS_EVT_DISCONNECT){
+    Serial.println(F("Client disconnected"));
+  } else if(type == WS_EVT_DATA){
+    Serial.println(F("Client Recive Data"));
+    deserializeJson(doc, data);
+    JsonVariant varSolenoid = doc["solenoid"];
+    if (!varSolenoid.isNull() && varSolenoid.as<bool>()) {
+      saveLog(today(), client->remoteIP().toString().c_str(), F("Se ha accionado la cerradura desde la web"));
+      solenoidTime = millis();
+    }
+    JsonVariant varRegistrar = doc["registrar"];
+    if (!varRegistrar.isNull() && varRegistrar.as<bool>()) {
+      registerTime = millis();
+    }
+    JsonVariant varUsuario = doc["usuario"];
+    JsonVariant varHex = doc["hex"];
+    if (!varUsuario.isNull() && !varHex.isNull()) {
+      saveCard(varUsuario.as<String>(), varHex.as<String>());
+      saveLog(today(), varHex.as<String>(), F("Nueva tarjeta registrada"));
+      sendAllJson("message", "success-Se ha registrada tarjeta");
+    }
+    JsonVariant varResetAll = doc["resetAll"];
+    if (!varResetAll.isNull() && varResetAll.as<bool>()) {
+      resetAllSystem();
+    }
   }
 }
 

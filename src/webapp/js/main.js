@@ -4,6 +4,7 @@ var btn_agregar = $("#btn_agregar");
 var usuario = $("#usuario");
 var btn_guardar = $("#btn_guardar");
 var btn_cancelar = $("#btn_cancelar");
+var btn_reset = $("#btn_reset");
 var estado = $("#estado");
 var hexText = $("#hexText");
 var hexCode = undefined;
@@ -39,6 +40,13 @@ btn_guardar.click(function () {
         btn_cancelar.click();
     } else {
         usuario.removeClass("is-valid").addClass("is-invalid");
+    }
+});
+
+btn_reset.click(function () {
+    var json = { "resetAll": true };
+    if (ws.readyState == WebSocket.OPEN) {
+        ws.send(JSON.stringify(json));
     }
 });
 
