@@ -216,7 +216,7 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
     deserializeJson(doc, data);
     JsonVariant varSolenoid = doc["solenoid"];
     if (!varSolenoid.isNull() && varSolenoid.as<bool>()) {
-      saveLog(today(), "web", F("Se ha accionado la cerradura desde la web"));
+      saveLog(today(), client->remoteIP().toString().c_str(), F("Se ha accionado la cerradura desde la web"));
       solenoidTime = millis();
     }
     JsonVariant varRegistrar = doc["registrar"];
