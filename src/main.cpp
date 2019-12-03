@@ -94,20 +94,27 @@ boolean findCard(const String &hexCode){
   File file = SPIFFS.open(csvFile, "r");
   String hexText = "";
   boolean isHex = false;
+  boolean isHeader = true;
   while (file.available()) {
     char c = file.read();
     if(c == ','){
       isHex = true;
     }else if(c == '\n'){
+      isHeader = false;
       isHex = false;
       if(hexCode == hexText){
+        file.close();
         return true;
       }
       hexText = "";
     }
-    if(isHex && c != ','){
+    if(isHex && c != ',' && isHeader == false){
       hexText.concat(c);
     }
+  }
+  if(hexCode == hexText){
+    file.close();
+    return true;
   }
   file.close();
   return false;
