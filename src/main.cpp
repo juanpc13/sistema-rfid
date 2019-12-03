@@ -71,6 +71,43 @@ int modeTimmer(){
   }
 }
 
+String today(){
+  struct tm timeinfo;
+  if(!getLocalTime(&timeinfo)){
+    Serial.println("Failed to obtain time");
+    return "-";
+  }
+  char timeStringBuff[50]; //50 chars should be enough
+  strftime(timeStringBuff, sizeof(timeStringBuff), "%d/%m/%Y %H:%M:%S", &timeinfo);
+  String asString(timeStringBuff);
+  return asString;
+}
+
+boolean saveLog(const String& today, const String& hexCode, const String& message){
+  //Si no exites el archivo, Crear el csv
+  if(!SPIFFS.exists(csvLogs)){
+    Serial.println(F("Crear archivo CSV"));
+    File file = SPIFFS.open(csvLogs, FILE_APPEND);
+    const char *headersCSV = "fecha,hex,message";
+    if(!file.print(headersCSV)){
+      Serial.println(F("No se ha podido escribir"));
+      file.close();
+      return false;
+    }
+    file.close();
+  }
+  //Guardar el registro
+  String text;
+  text.concat('\n');text.concat(today);text.concat(',');text.concat(hexCode);text.concat(',');text.concat(message);
+  File file = SPIFFS.open(csvLogs, FILE_APPEND);
+  if(!file.print(text)){
+    Serial.println(F("No se ha podido escribir en logs"));
+    return false;
+  }
+  file.close();
+  return true;
+}
+
 boolean saveCard(const String& usuario, const String& hexCode){
   //Si no exites el archivo, Crear los headers del csv
   if(!SPIFFS.exists(csvFile)){
@@ -173,6 +210,7 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
     deserializeJson(doc, data);
     JsonVariant varSolenoid = doc["solenoid"];
     if (!varSolenoid.isNull() && varSolenoid.as<bool>()) {
+      saveLog(today(), "web", F("Se ha accionado la cerradura desde la web"));
       solenoidTime = millis();
     }
     JsonVariant varRegistrar = doc["registrar"];
@@ -182,8 +220,8 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
     JsonVariant varUsuario = doc["usuario"];
     JsonVariant varHex = doc["hex"];
     if (!varUsuario.isNull() && !varHex.isNull()) {
-      Serial.println(today());
       saveCard(varUsuario.as<String>(), varHex.as<String>());
+      saveLog(today(), varHex.as<String>(), F("Nueva tarjeta registrada"));
       sendAllJson("message", "success-Se ha registrada tarjeta");
     }
   }
@@ -229,18 +267,6 @@ void setup() {
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 }
 
-String today(){
-  struct tm timeinfo;
-  if(!getLocalTime(&timeinfo)){
-    Serial.println("Failed to obtain time");
-    return "-";
-  }
-  char timeStringBuff[50]; //50 chars should be enough
-  strftime(timeStringBuff, sizeof(timeStringBuff), "%d/%m/%Y %H:%M:%S", &timeinfo);
-  String asString(timeStringBuff);
-  return asString;
-}
-
 String cardToHexString(){
   String hexString = "";
   for (byte i = 0; i < 4; i++) {
@@ -264,6 +290,7 @@ void manualRegister(){
     if(hexToString != "0:0:0:0"){
       digitalWrite(ledPin, LOW);
       saveCard("invitado", hexToString);
+      saveLog(today(), "hardware", F("Se ha registrado invitado manualmente"));
       delay(100);
       digitalWrite(ledPin, HIGH);
     }
@@ -282,9 +309,10 @@ void loop() {
       String hexToString = cardToHexString();
       Serial.println(hexToString);
       if(cardExits(hexToString)){
+        saveLog(today(), hexToString, F("Tarjeta ha accedido"));
         solenoidTime = millis();
       }else{
-        Serial.println(today());
+        saveLog(today(), hexToString, F("Tarjeta no Registrada"));
         Serial.println(F("Tarjeta no Registrada"));
       }
     }
