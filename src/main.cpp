@@ -31,6 +31,7 @@ MFRC522 rfid(SS_PIN, RST_PIN);
 byte nuidPICC[4];
 //System
 #define csvFile "/data.csv"
+#define csvLogs "/logs.csv"
 #define ledPin 2
 #define btnReg 0
 
@@ -90,7 +91,7 @@ boolean saveCard(const String& usuario, const String& hexCode){
   return true;
 }
 
-boolean findCard(const String &hexCode){
+boolean cardExits(const String &hexCode){
   File file = SPIFFS.open(csvFile, "r");
   String hexText = "";
   boolean isHex = false;
@@ -260,7 +261,7 @@ void loop() {
     if(isCard()){
       String hexToString = cardToHexString();
       Serial.println(hexToString);
-      if(findCard(hexToString)){
+      if(cardExits(hexToString)){
         solenoidTime = millis();
       }else{
         Serial.println(F("Tarjeta no Registrada"));
@@ -270,7 +271,7 @@ void loop() {
     Serial.println(F("Modo Registrar"));
     if(isCard()){
       String hexToString = cardToHexString();
-      if(findCard(hexToString)){
+      if(cardExits(hexToString)){
         sendAllJson("message", "error-Tarjeta ya ha sido registrada");
       }else{
         sendAllJson("hex", hexToString);
