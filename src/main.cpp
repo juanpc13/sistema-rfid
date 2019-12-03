@@ -110,6 +110,7 @@ boolean saveLog(const String& today, const String& hexCode, const String& messag
     return false;
   }
   file.close();
+  sendAllJson("update", "true");
   return true;
 }
 

@@ -93,6 +93,10 @@ function connect() {
                     break;
             }
         }
+        if (typeof json.update !== 'undefined' && json.update) {
+            cargarTablaDelay();
+            cargarTablaLogsDelay();
+        }
         console.log(json);
     };
 
@@ -246,5 +250,5 @@ function cargarTablaDelay() {
 function cargarTablaLogsDelay() {
     setTimeout(function () {
         cargarTablaLogs();
-    }, 2000);
+    }, 1000);
 }
