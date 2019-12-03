@@ -218,6 +218,27 @@ String cardToHexString(){
   return hexString;
 }
 
+void manualRegister(){
+  //Registro Manual
+  if(digitalRead(btnReg) == 0){
+    digitalWrite(ledPin, HIGH);
+    while(digitalRead(btnReg) == 0 && !isCard()){
+      delay(100);
+    }
+    String hexToString = cardToHexString();
+    if(hexToString != "0:0:0:0"){
+      digitalWrite(ledPin, LOW);
+      saveCard("invitado", hexToString);
+      delay(100);
+      digitalWrite(ledPin, HIGH);
+    }
+    while(digitalRead(btnReg) == 0){
+      delay(100);
+    }
+    digitalWrite(ledPin, LOW);
+  }
+}
+
 void loop() {
   uint8_t mode = modeTimmer();
   if(mode == 1){//Leer tarjetas
@@ -243,23 +264,6 @@ void loop() {
   //Delay de Debug
   delay(500);
 
-  //Registro Manual
-  if(digitalRead(btnReg) == 0){
-    digitalWrite(ledPin, HIGH);
-    while(digitalRead(btnReg) == 0 && !isCard()){
-      delay(100);
-    }
-    String hexToString = cardToHexString();
-    if(hexToString != "0:0:0:0"){
-      digitalWrite(ledPin, LOW);
-      saveCard("invitado", hexToString);
-      delay(100);
-      digitalWrite(ledPin, HIGH);
-    }
-    while(digitalRead(btnReg) == 0){
-      delay(100);
-    }
-    digitalWrite(ledPin, LOW);
-  }
+  manualRegister();
 
 }
