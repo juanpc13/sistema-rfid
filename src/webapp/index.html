@@ -22,6 +22,8 @@
                         aria-controls="sistema" aria-selected="true">Sistema</a>
                     <a class="nav-item nav-link" id="administrar-tab" data-toggle="tab" href="#administrar" role="tab"
                         aria-controls="administrar" aria-selected="false">Administrar</a>
+                    <a class="nav-item nav-link" id="historico-tab" data-toggle="tab" href="#historico" role="tab"
+                        aria-controls="historico" aria-selected="false">Historico</a>
                 </div>
             </nav>
             <div class="tab-content" id="nav-tabContent">
@@ -42,6 +44,26 @@
                             </tr>
                         </thead>
                         <tbody id="table_body">
+                            <tr>
+                                <!--th scope="row">1</th>
+                                <td>Mark</td-->
+                                <td colspan="6" class="text-center text-secondary">Cargando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-pane fade" id="historico" role="tabpanel" aria-labelledby="historico-tab">
+                    <br>
+                    <h2>Historico de tarjetas</h2>
+                    <table class="table">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th scope="col">Fecha</th>
+                                <th scope="col">Tarjeta</th>
+                                <th scope="col">Acci&oacute;n</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table_history">
                             <tr>
                                 <!--th scope="row">1</th>
                                 <td>Mark</td-->

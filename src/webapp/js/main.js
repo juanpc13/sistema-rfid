@@ -8,6 +8,7 @@ var estado = $("#estado");
 var hexText = $("#hexText");
 var hexCode = undefined;
 var table_body = $("#table_body");
+var table_history = $("#table_history");
 
 btn_abrir.click(function () {
     var json = { solenoid: true };
@@ -68,6 +69,7 @@ function connect() {
         estado.attr("class", "badge badge-success");
         estado.text("WebSocket en linea");
         cargarTablaDelay();
+        cargarTablaLogsDelay();
     };
 
     ws.onmessage = function (evt) {
@@ -139,6 +141,26 @@ function getUsuarios() {
     return list;
 }
 
+function getLogs() {
+    var list = [];
+    $.ajax({
+        type: "GET",
+        async: false,
+        //url: "http://192.168.1.8/logs.csv",
+        url: "logs.csv",
+        success: function (data) {
+            var response = csvJSON(data);
+            //var response = jQuery.parseJSON(data);
+            if (typeof response === 'undefined') {
+                alert("Error al Cargar la Tabla");
+            } else {
+                list = response;
+            }
+        }
+    });
+    return list;
+}
+
 function createTableRowWith(value) {
     var tr = document.createElement("tr");
     var td1 = document.createElement("th");
@@ -150,11 +172,24 @@ function createTableRowWith(value) {
     return tr;
 }
 
+function createTableRowWithLog(value) {
+    var tr = document.createElement("tr");
+    var td1 = document.createElement("td");
+    var td2 = document.createElement("td");
+    var td3 = document.createElement("td");
+    td1.setAttribute("scope", "row");
+    td1.innerText = value.fecha;
+    td2.innerText = value.hex;
+    td3.innerText = value.message;
+    tr.append(td1, td2, td3);
+    return tr;
+}
+
 function cargarTabla() {
     var listTable = getUsuarios();
+    //Vaciar la tabla
+    table_body.html("");
     if (listTable.length > 0) {
-        //Vaciar la tabla
-        table_body.html("");
         //Llenar la tabla
         $.each(listTable, function (key, value) {
             var tr = createTableRowWith(value);
@@ -164,6 +199,23 @@ function cargarTabla() {
         var emptyValue = { "usuario": "-", "hex": "-" };
         var tr = createTableRowWith(emptyValue);
         table_body.append(tr);
+    }
+}
+
+function cargarTablaLogs() {
+    var listTable = getLogs();
+    //Vaciar la tabla
+    table_history.html("");
+    if (listTable.length > 0) {
+        //Llenar la tabla
+        $.each(listTable, function (key, value) {
+            var tr = createTableRowWithLog(value);
+            table_history.append(tr);
+        });
+    } else {
+        var emptyValue = { "fecha": "-", "hex": "-", "message":"-"};
+        var tr = createTableRowWithLog(emptyValue);
+        table_history.append(tr);
     }
 }
 
@@ -189,4 +241,10 @@ function cargarTablaDelay() {
     setTimeout(function () {
         cargarTabla();
     }, 1000);
+}
+
+function cargarTablaLogsDelay() {
+    setTimeout(function () {
+        cargarTablaLogs();
+    }, 2000);
 }
