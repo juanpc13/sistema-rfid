@@ -3,6 +3,7 @@
 #include <ESPAsyncWebServer.h>
 #include <MFRC522.h>
 #include <StreamUtils.h>
+#include "time.h"
 #ifdef ESP32
   #include <WiFi.h>
   #include <AsyncTCP.h>
@@ -34,6 +35,10 @@ byte nuidPICC[4];
 #define csvLogs "/logs.csv"
 #define ledPin 2
 #define btnReg 0
+//NTP
+const char* ntpServer = "pool.ntp.org";
+const long  gmtOffset_sec = -3600*6;
+const int   daylightOffset_sec = 3600;
 
 
 void sendAllJson(const String& key, const String& value){
@@ -177,6 +182,7 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
     JsonVariant varUsuario = doc["usuario"];
     JsonVariant varHex = doc["hex"];
     if (!varUsuario.isNull() && !varHex.isNull()) {
+      Serial.println(today());
       saveCard(varUsuario.as<String>(), varHex.as<String>());
       sendAllJson("message", "success-Se ha registrada tarjeta");
     }
@@ -219,6 +225,20 @@ void setup() {
   //Iniciar Servidor
   DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
   server.begin();
+  //NTP
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+}
+
+String today(){
+  struct tm timeinfo;
+  if(!getLocalTime(&timeinfo)){
+    Serial.println("Failed to obtain time");
+    return "-";
+  }
+  char timeStringBuff[50]; //50 chars should be enough
+  strftime(timeStringBuff, sizeof(timeStringBuff), "%d/%m/%Y %H:%M:%S", &timeinfo);
+  String asString(timeStringBuff);
+  return asString;
 }
 
 String cardToHexString(){
@@ -264,6 +284,7 @@ void loop() {
       if(cardExits(hexToString)){
         solenoidTime = millis();
       }else{
+        Serial.println(today());
         Serial.println(F("Tarjeta no Registrada"));
       }
     }
