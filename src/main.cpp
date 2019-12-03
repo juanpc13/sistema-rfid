@@ -177,7 +177,7 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
     JsonVariant varHex = doc["hex"];
     if (!varUsuario.isNull() && !varHex.isNull()) {
       saveCard(varUsuario.as<String>(), varHex.as<String>());
-      sendAllJson("message", "1-Se ha registrada tarjeta");
+      sendAllJson("message", "success-Se ha registrada tarjeta");
     }
   }
 }
@@ -271,7 +271,7 @@ void loop() {
     if(isCard()){
       String hexToString = cardToHexString();
       if(findCard(hexToString)){
-        sendAllJson("message", "2-Tarjeta ya ha sido registrada");
+        sendAllJson("message", "error-Tarjeta ya ha sido registrada");
       }else{
         sendAllJson("hex", hexToString);
       }

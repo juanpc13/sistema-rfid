@@ -83,10 +83,10 @@ function connect() {
             var code = splitMessage[0];
             var message = splitMessage[1];
             switch(code){
-                case "1":
+                case "success":
                     toastr.success(message);
                     break;
-                case "2":
+                case "error":
                     toastr.error(message);
                     break;
             }
