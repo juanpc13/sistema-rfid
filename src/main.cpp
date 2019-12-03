@@ -92,17 +92,23 @@ boolean saveCard(const String& usuario, const String& hexCode){
 
 boolean findCard(const String &hexCode){
   File file = SPIFFS.open(csvFile, "r");
-  String line = "";
+  String hexText = "";
+  boolean isHex = false;
   while (file.available()) {
     char c = file.read();
-    if(c == '\n'){
-      Serial.println(line);
-      line = "";
-    }else{
-      line.concat(c);
+    if(c == ','){
+      isHex = true;
+    }else if(c == '\n'){
+      isHex = false;
+      if(hexCode == hexText){
+        return true;
+      }
+      hexText = "";
+    }
+    if(isHex && c != ','){
+      hexText.concat(c);
     }
   }
-  //Serial.println(line);
   file.close();
   return false;
 }
