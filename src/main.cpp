@@ -2,9 +2,8 @@
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
 #include <MFRC522.h>
-#include <StreamUtils.h>
-#include "time.h"
 #ifdef ESP32
+  #include "time.h"
   #include <WiFi.h>
   #include <AsyncTCP.h>
   #include <SPIFFS.h>
@@ -13,9 +12,11 @@
   #include <ESP8266WiFi.h>
   #include <ESPAsyncTCP.h>
   #include "FS.h"
+  #define FILE_APPEND "a"
+  #define FILE_READ "r"
+  #define FILE_FILE_WRITE "w"
   #include <ESP8266mDNS.h>
 #endif
-
 const char *ssid = "TURBONETT_1DFD27";
 const char *password = "57E04D255E";
 
@@ -72,6 +73,7 @@ int modeTimmer(){
 }
 
 String today(){
+#ifdef ESP32
   struct tm timeinfo;
   if(!getLocalTime(&timeinfo)){
     Serial.println("Failed to obtain time");
@@ -81,6 +83,9 @@ String today(){
   strftime(timeStringBuff, sizeof(timeStringBuff), "%d/%m/%Y %H:%M:%S", &timeinfo);
   String asString(timeStringBuff);
   return asString;
+#elif defined(ESP8266)
+  return "No disponible";
+#endif
 }
 
 boolean saveLog(const String& today, const String& hexCode, const String& message){
@@ -134,7 +139,7 @@ boolean saveCard(const String& usuario, const String& hexCode){
 }
 
 boolean cardExits(const String &hexCode){
-  File file = SPIFFS.open(csvFile, "r");
+  File file = SPIFFS.open(csvFile, FILE_READ);
   String hexText = "";
   boolean isHex = false;
   boolean isHeader = true;
